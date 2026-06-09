@@ -91,16 +91,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem("cg_wallet");
   }, []);
 
-  function getClient() {
+  function getWriteClient(account: string) {
     const eth = (window as any).ethereum;
     return createClient({
       chain: studioChain,
-      ...(eth ? { provider: eth } : {}),
+      provider: eth,
+      account: account as `0x${string}`,
     } as any);
   }
 
   const readContract = useCallback(async (method: string, args: unknown[] = []) => {
-    const client = getClient();
+    const eth = (window as any).ethereum;
+    const client = createClient({ chain: studioChain, ...(eth ? { provider: eth } : {}) } as any);
     return (client as any).readContract({
       address: CONTRACT_ADDRESS,
       functionName: method,
@@ -110,7 +112,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const writeContract = useCallback(async (method: string, args: unknown[] = []) => {
     if (!address) throw new Error("Wallet not connected");
-    const client = getClient();
+    const client = getWriteClient(address);
     await client.initializeConsensusSmartContract();
     const hash = await (client as any).writeContract({
       address: CONTRACT_ADDRESS,
