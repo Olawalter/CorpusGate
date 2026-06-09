@@ -3,6 +3,7 @@
  * every consumer gets a guaranteed-valid value or a clear error.
  */
 import { isAddress, getAddress } from "viem";
+import { studionet } from "genlayer-js/chains";
 
 function resolveAddress(envKey: string, raw: string | undefined): `0x${string}` {
   if (!raw || !isAddress(raw)) {
@@ -25,13 +26,9 @@ export const CHAIN_ID  = parseInt(process.env.NEXT_PUBLIC_GENLAYER_CHAIN_ID ?? "
 export const RPC_URL   = process.env.NEXT_PUBLIC_GENLAYER_RPC   ?? "https://studio.genlayer.com/api";
 export const EXPLORER  = process.env.NEXT_PUBLIC_GENLAYER_EXPLORER ?? "http://explorer-studio.genlayer.com/";
 
-export const studioChain = {
-  id: CHAIN_ID,
-  name: "GenLayer Studio",
-  rpcUrls: { default: { http: [RPC_URL] as readonly string[] } },
-  nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
-  blockExplorers: { default: { name: "GenLayer Explorer", url: EXPLORER } },
-};
+// Use the official studionet chain from genlayer-js — it includes
+// consensusMainContract and other fields that genlayer-js requires internally.
+export { studionet as studioChain };
 
 /** Returns true if the contract address was resolved from env correctly. */
 export function isContractConfigured(): boolean {

@@ -6,6 +6,9 @@ import { createClient } from "genlayer-js";
 import { isAddress } from "viem";
 import { CONTRACT_ADDRESS, studioChain } from "./config";
 
+// Re-create client if chain changes (hot reload safety)
+
+
 let _client: ReturnType<typeof createClient> | null = null;
 
 function getReadClient() {
