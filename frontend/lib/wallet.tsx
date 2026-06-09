@@ -132,12 +132,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       args,
     });
 
-    const hash = await (client as any).writeContract({
-      address: checksumContract,
-      functionName: method,
-      args,
-      account: checksumAccount,
-    });
+    let hash: unknown;
+    try {
+      hash = await (client as any).writeContract({
+        address: checksumContract,
+        functionName: method,
+        args,
+        account: checksumAccount,
+      });
+    } catch (err: any) {
+      // MetaMask rejection (4001) or user-cancelled — surface cleanly
+      if (err?.code === 4001 || err?.message?.includes("User rejected")) {
+        throw new Error("Transaction cancelled — you rejected the request in MetaMask.");
+      }
+      throw err;
+    }
 
     return (client as any).waitForTransactionReceipt({
       hash,
