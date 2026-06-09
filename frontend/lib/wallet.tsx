@@ -113,7 +113,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const writeContract = useCallback(async (method: string, args: unknown[] = []) => {
     if (!address) throw new Error("Wallet not connected");
     const client = getWriteClient(address);
-    await client.initializeConsensusSmartContract();
     const hash = await (client as any).writeContract({
       address: CONTRACT_ADDRESS,
       functionName: method,
