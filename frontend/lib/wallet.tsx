@@ -37,7 +37,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   // Restore from session
   useEffect(() => {
     const saved = sessionStorage.getItem("cg_wallet");
-    if (saved) setAddress(saved);
+    if (saved && /^0x[0-9a-fA-F]{40}$/.test(saved)) setAddress(saved);
+    else sessionStorage.removeItem("cg_wallet");
     // Listen for account changes
     const eth = (window as any).ethereum;
     if (!eth) return;
@@ -110,10 +111,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const writeContract = useCallback(async (method: string, args: unknown[] = []) => {
-    if (!address) throw new Error("Wallet not connected");
+    if (!address || !/^0x[0-9a-fA-F]{40}$/.test(address)) throw new Error("Wallet not connected");
+    if (!/^0x[0-9a-fA-F]{40}$/.test(CONTRACT_ADDRESS)) throw new Error("Contract address not configured");
     const client = getWriteClient();
     const hash = await (client as any).writeContract({
-      address: CONTRACT_ADDRESS,
+      address: CONTRACT_ADDRESS as `0x${string}`,
       functionName: method,
       args,
       account: address as `0x${string}`,
