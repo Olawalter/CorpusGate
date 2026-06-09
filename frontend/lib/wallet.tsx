@@ -115,14 +115,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const checksumAccount  = getAddress(address);
     const checksumContract = getAddress(CONTRACT_ADDRESS);
 
+    // genlayer-js internally reads `senderAccount.address` — so account
+    // must be a viem JSON-RPC Account object, NOT a raw address string.
+    const accountObj = { address: checksumAccount, type: "json-rpc" } as const;
+
     const eth = (window as any).ethereum;
 
-    // Pass account to createClient AND writeContract — genlayer-js may
-    // read it from either location depending on version.
     const client = createClient({
       chain: studioChain,
       provider: eth,
-      account: checksumAccount,
+      account: accountObj,
     } as any);
 
     console.log("[CorpusGate] writeContract →", {
@@ -138,7 +140,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         address: checksumContract,
         functionName: method,
         args,
-        account: checksumAccount,
+        account: accountObj,
       });
     } catch (err: any) {
       // MetaMask rejection (4001) or user-cancelled — surface cleanly
