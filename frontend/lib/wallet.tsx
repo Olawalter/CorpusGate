@@ -115,8 +115,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const checksumAccount  = getAddress(address);
     const checksumContract = getAddress(CONTRACT_ADDRESS);
 
-    // genlayer-js internally reads `senderAccount.address` — so account
-    // must be a viem JSON-RPC Account object, NOT a raw address string.
+    // genlayer-js routing (getCustomTransportConfig):
+    //   typeof config.account !== "object"  →  isAddress = true
+    //   → eth_sendTransaction routes through MetaMask (correct)
+    //
+    // If we pass account as an object to createClient, isAddress = false
+    // → eth_sendTransaction goes directly to the RPC which doesn't support it.
+    //
+    // Fix: do NOT pass account to createClient (keeps isAddress = true / MetaMask routing).
+    //      Pass account as { address, type:"json-rpc" } only to writeContract
+    //      so senderAccount.address resolves correctly inside genlayer-js.
     const accountObj = { address: checksumAccount, type: "json-rpc" } as const;
 
     const eth = (window as any).ethereum;
@@ -124,7 +132,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const client = createClient({
       chain: studioChain,
       provider: eth,
-      account: accountObj,
+      // account intentionally omitted — see comment above
     } as any);
 
     console.log("[CorpusGate] writeContract →", {
