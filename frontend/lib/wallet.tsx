@@ -2,49 +2,57 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { createClient } from "genlayer-js";
 import { TransactionStatus } from "genlayer-js/types";
-
-const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_GENLAYER_CHAIN_ID ?? "61999", 10);
-const RPC_URL  = process.env.NEXT_PUBLIC_GENLAYER_RPC ?? "https://studio.genlayer.com/api";
-const EXPLORER = process.env.NEXT_PUBLIC_GENLAYER_EXPLORER ?? "http://explorer-studio.genlayer.com/";
-
-export const CONTRACT_ADDRESS =
-  (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`) ||
-  "0x0000000000000000000000000000000000000000";
-
-const studioChain = {
-  id: CHAIN_ID,
-  name: "GenLayer Studio",
-  rpcUrls: { default: { http: [RPC_URL] as readonly string[] } },
-  nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
-  blockExplorers: { default: { name: "GenLayer Explorer", url: EXPLORER } },
-};
+import { isAddress, getAddress } from "viem";
+import { CONTRACT_ADDRESS, studioChain, isContractConfigured, CHAIN_ID, RPC_URL, EXPLORER } from "./config";
 
 interface WalletCtx {
   address: string | null;
   connecting: boolean;
+  contractOk: boolean;
   connect: () => Promise<void>;
   disconnect: () => void;
-  readContract: (method: string, args?: unknown[]) => Promise<unknown>;
   writeContract: (method: string, args?: unknown[]) => Promise<unknown>;
 }
 
 const Ctx = createContext<WalletCtx | null>(null);
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const [address, setAddress]     = useState<string | null>(null);
+  const [address, setAddress]       = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const contractOk = isContractConfigured();
 
-  // Restore from session
+  // Restore persisted wallet address — validate format before trusting
   useEffect(() => {
     const saved = sessionStorage.getItem("cg_wallet");
-    if (saved && /^0x[0-9a-fA-F]{40}$/.test(saved)) setAddress(saved);
-    else sessionStorage.removeItem("cg_wallet");
-    // Listen for account changes
+    if (saved && isAddress(saved)) {
+      setAddress(getAddress(saved)); // store in checksum form
+    } else {
+      sessionStorage.removeItem("cg_wallet");
+    }
+
     const eth = (window as any).ethereum;
     if (!eth) return;
+
+    // Sync live MetaMask account
+    eth.request({ method: "eth_accounts" })
+      .then((accounts: string[]) => {
+        if (accounts[0] && isAddress(accounts[0])) {
+          const checksummed = getAddress(accounts[0]);
+          setAddress(checksummed);
+          sessionStorage.setItem("cg_wallet", checksummed);
+        }
+      })
+      .catch(() => {/* ignore */});
+
     const handler = (accounts: string[]) => {
-      if (accounts.length === 0) { setAddress(null); sessionStorage.removeItem("cg_wallet"); }
-      else { setAddress(accounts[0]); sessionStorage.setItem("cg_wallet", accounts[0]); }
+      if (accounts.length === 0) {
+        setAddress(null);
+        sessionStorage.removeItem("cg_wallet");
+      } else if (isAddress(accounts[0])) {
+        const checksummed = getAddress(accounts[0]);
+        setAddress(checksummed);
+        sessionStorage.setItem("cg_wallet", checksummed);
+      }
     };
     eth.on("accountsChanged", handler);
     return () => eth.removeListener("accountsChanged", handler);
@@ -53,17 +61,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const connect = useCallback(async () => {
     const eth = (window as any).ethereum;
     if (!eth) {
-      alert("No wallet detected. Please install MetaMask or a compatible wallet extension.");
+      alert("No wallet detected. Please install MetaMask.");
       return;
     }
     setConnecting(true);
     try {
       const accounts: string[] = await eth.request({ method: "eth_requestAccounts" });
-      if (accounts[0]) {
-        setAddress(accounts[0]);
-        sessionStorage.setItem("cg_wallet", accounts[0]);
+      if (accounts[0] && isAddress(accounts[0])) {
+        const checksummed = getAddress(accounts[0]);
+        setAddress(checksummed);
+        sessionStorage.setItem("cg_wallet", checksummed);
       }
-      // Add GenLayer Studio network if not present
+      // Add / switch to GenLayer Studio
       try {
         await eth.request({
           method: "wallet_addEthereumChain",
@@ -76,7 +85,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           }],
         });
       } catch {
-        // Chain may already exist — switch to it
         await eth.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x${CHAIN_ID.toString(16)}` }],
@@ -92,44 +100,41 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem("cg_wallet");
   }, []);
 
-  function getWriteClient() {
-    const eth = (window as any).ethereum;
-    return createClient({
-      chain: studioChain,
-      provider: eth,
-    } as any);
-  }
-
-  const readContract = useCallback(async (method: string, args: unknown[] = []) => {
-    const eth = (window as any).ethereum;
-    const client = createClient({ chain: studioChain, ...(eth ? { provider: eth } : {}) } as any);
-    return (client as any).readContract({
-      address: CONTRACT_ADDRESS,
-      functionName: method,
-      args,
-    });
-  }, []);
-
   const writeContract = useCallback(async (method: string, args: unknown[] = []) => {
-    if (!address || !/^0x[0-9a-fA-F]{40}$/.test(address)) throw new Error("Wallet not connected");
-    if (!/^0x[0-9a-fA-F]{40}$/.test(CONTRACT_ADDRESS)) throw new Error("Contract address not configured");
-    const client = getWriteClient();
+    // Guard: wallet
+    if (!address || !isAddress(address)) {
+      throw new Error("Wallet not connected. Please connect MetaMask first.");
+    }
+    // Guard: contract
+    if (!contractOk || !isAddress(CONTRACT_ADDRESS)) {
+      throw new Error(
+        "Contract address is not configured. Set NEXT_PUBLIC_CONTRACT_ADDRESS in Vercel environment variables."
+      );
+    }
+
+    const checksumAccount  = getAddress(address);
+    const checksumContract = getAddress(CONTRACT_ADDRESS);
+
+    const eth = (window as any).ethereum;
+    const client = createClient({ chain: studioChain, provider: eth } as any);
+
     const hash = await (client as any).writeContract({
-      address: CONTRACT_ADDRESS as `0x${string}`,
+      address: checksumContract,
       functionName: method,
       args,
-      account: address as `0x${string}`,
+      account: checksumAccount,
     });
+
     return (client as any).waitForTransactionReceipt({
       hash,
       status: TransactionStatus.FINALIZED,
       retries: 100,
       interval: 3000,
     });
-  }, [address]);
+  }, [address, contractOk]);
 
   return (
-    <Ctx.Provider value={{ address, connecting, connect, disconnect, readContract, writeContract }}>
+    <Ctx.Provider value={{ address, connecting, contractOk, connect, disconnect, writeContract }}>
       {children}
     </Ctx.Provider>
   );
