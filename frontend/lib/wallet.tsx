@@ -116,7 +116,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const checksumContract = getAddress(CONTRACT_ADDRESS);
 
     const eth = (window as any).ethereum;
-    const client = createClient({ chain: studioChain, provider: eth } as any);
+
+    // Pass account to createClient AND writeContract — genlayer-js may
+    // read it from either location depending on version.
+    const client = createClient({
+      chain: studioChain,
+      provider: eth,
+      account: checksumAccount,
+    } as any);
+
+    console.log("[CorpusGate] writeContract →", {
+      method,
+      contract: checksumContract,
+      account: checksumAccount,
+      args,
+    });
 
     const hash = await (client as any).writeContract({
       address: checksumContract,

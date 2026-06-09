@@ -60,8 +60,8 @@ export default function LibraryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#F4EFE7]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Corpus Library</h1>
-          <p className="text-sm text-[#9BA7B4] mt-1">{filtered.length} accepted paper{filtered.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-2xl font-bold text-[#F5F7FA]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Corpus Library</h1>
+          <p className="text-sm text-[#94A3B8] mt-1">{filtered.length} accepted paper{filtered.length !== 1 ? "s" : ""}</p>
         </div>
         <Link href="/paper/submit" className="btn-primary text-sm">Submit Paper</Link>
       </div>
@@ -74,44 +74,44 @@ export default function LibraryPage() {
           {corpora.map((c) => <option key={c.corpus_id} value={c.corpus_id}>{c.name}</option>)}
         </select>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#9BA7B4] whitespace-nowrap">Min relevance</span>
+          <span className="text-xs text-[#94A3B8] whitespace-nowrap">Min relevance</span>
           <input type="range" min={0} max={100} value={minScore}
             onChange={(e) => setMinScore(parseInt(e.target.value))}
-            className="w-24 accent-[#D6A84F]" />
-          <span className="text-xs font-mono text-[#D6A84F] w-8">{minScore}</span>
+            className="w-24 accent-[#3B82F6]" />
+          <span className="text-xs font-mono text-[#3B82F6] w-8">{minScore}</span>
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="card text-center py-16">
-          <p className="text-[#9BA7B4] mb-4">No accepted papers match your filters.</p>
+          <p className="text-[#94A3B8] mb-4">No accepted papers match your filters.</p>
           <Link href="/paper/submit" className="btn-primary">Submit a Paper</Link>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {filtered.map(({ paper, review, corpus }) => (
             <Link key={paper.paper_id} href={`/paper/${paper.paper_id}`}
-              className="card hover:border-[#D6A84F]/30 transition-colors block space-y-3">
+              className="card hover:border-[#3B82F6]/30 transition-colors block space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <DecisionBadge decision={paper.status} />
-                {review && <span className="text-xs font-mono text-[#9BA7B4]">{review.confidence}</span>}
+                {review && <span className="text-xs font-mono text-[#94A3B8]">{review.confidence}</span>}
               </div>
-              <h3 className="font-semibold text-[#F4EFE7] leading-snug line-clamp-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <h3 className="font-semibold text-[#F5F7FA] leading-snug line-clamp-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 {paper.title}
               </h3>
-              {paper.authors && <p className="text-xs text-[#9BA7B4]">{paper.authors}</p>}
-              <p className="text-sm text-[#9BA7B4] line-clamp-2">{paper.abstract}</p>
+              {paper.authors && <p className="text-xs text-[#94A3B8]">{paper.authors}</p>}
+              <p className="text-sm text-[#94A3B8] line-clamp-2">{paper.abstract}</p>
               {review && (
                 <div className="space-y-2">
-                  <ScoreBar label="Relevance" score={review.relevance_score} color="#D6A84F" />
-                  <ScoreBar label="Quality"   score={review.quality_score}   color={review.quality_score >= 70 ? "#4CAF7D" : "#E0A33A"} />
+                  <ScoreBar label="Relevance" score={review.relevance_score} color="#3B82F6" />
+                  <ScoreBar label="Quality"   score={review.quality_score}   color={review.quality_score >= 70 ? "#4CAF7D" : "#3B82F6"} />
                 </div>
               )}
-              <div className="flex items-center justify-between pt-2 border-t border-[#2E3338]">
-                {corpus && <span className="text-xs text-[#9BA7B4]">{corpus.name}</span>}
+              <div className="flex items-center justify-between pt-2 border-t border-[#1E2D42]">
+                {corpus && <span className="text-xs text-[#94A3B8]">{corpus.name}</span>}
                 <div className="flex flex-wrap gap-1 ml-auto">
                   {paper.keywords?.slice(0, 3).map((k) => (
-                    <span key={k} className="text-xs px-1.5 py-0.5 rounded bg-[#2E3338] text-[#9BA7B4] font-mono">{k}</span>
+                    <span key={k} className="text-xs px-1.5 py-0.5 rounded bg-[#1E2D42] text-[#94A3B8] font-mono">{k}</span>
                   ))}
                 </div>
               </div>

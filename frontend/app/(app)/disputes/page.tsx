@@ -79,8 +79,8 @@ function DisputesContent() {
   return (
     <div className="space-y-8 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-[#F4EFE7]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Disputes</h1>
-        <p className="text-sm text-[#9BA7B4] mt-1">Challenge a rejected paper with additional evidence. Validators re-evaluate on GenLayer Studio.</p>
+        <h1 className="text-2xl font-bold text-[#F5F7FA]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Disputes</h1>
+        <p className="text-sm text-[#94A3B8] mt-1">Challenge a rejected paper with additional evidence. Validators re-evaluate on GenLayer Studio.</p>
       </div>
 
       {error   && <div className="p-4 rounded-lg bg-[#D65A5A]/10 border border-[#D65A5A]/30 text-[#D65A5A] text-sm">{error}</div>}
@@ -88,16 +88,16 @@ function DisputesContent() {
 
       {pending.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-[#F4EFE7] mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Pending Disputes</h2>
+          <h2 className="text-lg font-semibold text-[#F5F7FA] mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Pending Disputes</h2>
           <div className="space-y-3">
             {pending.map((d) => {
               const paper = rejectedPapers.find((p) => p.paper_id === d.paper_id);
               return (
                 <div key={d.paper_id} className="card flex items-start justify-between gap-4 flex-wrap">
                   <div>
-                    <p className="text-xs font-mono text-[#9BA7B4] mb-1">{d.paper_id}</p>
-                    <p className="font-semibold text-[#F4EFE7]">{paper?.title ?? d.paper_id}</p>
-                    <p className="text-sm text-[#9BA7B4] mt-1">{d.additional_context}</p>
+                    <p className="text-xs font-mono text-[#94A3B8] mb-1">{d.paper_id}</p>
+                    <p className="font-semibold text-[#F5F7FA]">{paper?.title ?? d.paper_id}</p>
+                    <p className="text-sm text-[#94A3B8] mt-1">{d.additional_context}</p>
                     <span className="badge badge-review mt-2">PENDING</span>
                   </div>
                   <button onClick={() => handleResolve(d.paper_id)} disabled={resolving === d.paper_id}
@@ -112,10 +112,10 @@ function DisputesContent() {
       )}
 
       <div>
-        <h2 className="text-lg font-semibold text-[#F4EFE7] mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>File a Dispute</h2>
+        <h2 className="text-lg font-semibold text-[#F5F7FA] mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>File a Dispute</h2>
         <form onSubmit={handleDispute} className="card space-y-5">
           <div>
-            <label className="block text-sm text-[#9BA7B4] mb-1.5">Rejected Paper *</label>
+            <label className="block text-sm text-[#94A3B8] mb-1.5">Rejected Paper *</label>
             <select className="input" value={form.paper_id}
               onChange={(e) => setForm({ ...form, paper_id: e.target.value })} required>
               <option value="">— Select a rejected paper —</option>
@@ -125,28 +125,28 @@ function DisputesContent() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-[#9BA7B4] mb-1.5">Additional Context *</label>
+            <label className="block text-sm text-[#94A3B8] mb-1.5">Additional Context *</label>
             <textarea className="input" rows={4}
               placeholder="Explain why the rejection was incorrect. Provide clarification that validators may have missed."
               value={form.additional_context}
               onChange={(e) => setForm({ ...form, additional_context: e.target.value })} required />
           </div>
           <div>
-            <label className="block text-sm text-[#9BA7B4] mb-1.5">Corrected Methodology (optional)</label>
+            <label className="block text-sm text-[#94A3B8] mb-1.5">Corrected Methodology (optional)</label>
             <textarea className="input" rows={3}
               placeholder="Provide a clearer description of the research method if the original was unclear."
               value={form.corrected_methodology}
               onChange={(e) => setForm({ ...form, corrected_methodology: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm text-[#9BA7B4] mb-1.5">Note to Reviewer (optional)</label>
+            <label className="block text-sm text-[#94A3B8] mb-1.5">Note to Reviewer (optional)</label>
             <textarea className="input" rows={2}
               placeholder="Any message you want to include for the validator review."
               value={form.reviewer_note}
               onChange={(e) => setForm({ ...form, reviewer_note: e.target.value })} />
           </div>
-          <div className="p-3 rounded-lg" style={{ background: "#E0A33A0D", border: "1px solid #E0A33A33" }}>
-            <p className="text-xs text-[#E0A33A]">⚠ Filing a dispute triggers a new GenLayer validator consensus on Studio. The on-chain decision will be updated.</p>
+          <div className="p-3 rounded-lg" style={{ background: "#3B82F60D", border: "1px solid #3B82F633" }}>
+            <p className="text-xs text-[#3B82F6]">⚠ Filing a dispute triggers a new GenLayer validator consensus on Studio. The on-chain decision will be updated.</p>
           </div>
           <div className="flex justify-end">
             <button type="submit" disabled={submitting} className="btn-primary">
@@ -158,17 +158,17 @@ function DisputesContent() {
 
       {resolved.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-[#F4EFE7] mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Resolved Disputes</h2>
+          <h2 className="text-lg font-semibold text-[#F5F7FA] mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Resolved Disputes</h2>
           <div className="space-y-3">
             {resolved.map((d) => (
               <div key={d.paper_id} className="card flex items-center justify-between gap-4 flex-wrap">
                 <div>
-                  <p className="text-xs font-mono text-[#9BA7B4] mb-1">{d.paper_id}</p>
-                  <p className="text-sm text-[#9BA7B4]">{d.additional_context}</p>
+                  <p className="text-xs font-mono text-[#94A3B8] mb-1">{d.paper_id}</p>
+                  <p className="text-sm text-[#94A3B8]">{d.additional_context}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {d.outcome && <DecisionBadge decision={d.outcome} />}
-                  <Link href={`/paper/${d.paper_id}`} className="text-xs text-[#D6A84F] hover:opacity-80">View →</Link>
+                  <Link href={`/paper/${d.paper_id}`} className="text-xs text-[#3B82F6] hover:opacity-80">View →</Link>
                 </div>
               </div>
             ))}
@@ -182,7 +182,7 @@ function DisputesContent() {
 export default function DisputesPage() {
   return (
     <WalletRequired>
-      <Suspense fallback={<div className="py-20 text-center text-[#9BA7B4]">Loading…</div>}>
+      <Suspense fallback={<div className="py-20 text-center text-[#94A3B8]">Loading…</div>}>
         <DisputesContent />
       </Suspense>
     </WalletRequired>
