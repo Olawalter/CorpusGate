@@ -122,11 +122,11 @@ Methodology excerpt: {paper.get('methodology', 'Not provided')}
 Conclusion excerpt: {paper.get('conclusion', 'Not provided')}
 
 EVALUATION CRITERIA
-1. Semantic relevance — Does the paper's core content match the corpus topic? (not just keyword presence)
-2. Methodology quality — Is the research method clearly described, rigorous, and reproducible?
-3. Evidence strength — Are claims supported by data, experiments, or credible references?
-4. Topic fit — Is the paper within the included topics and not in the excluded topics?
-5. Quality signals — Flag if the paper is vague, promotional, spam, or lacks academic substance.
+1. Semantic relevance — Does the paper's core content match the corpus topic?
+2. Methodology quality — Is the research method clearly described and rigorous?
+3. Evidence strength — Are claims supported by data, experiments, or references?
+4. Topic fit — Is the paper within included topics and outside excluded topics?
+5. Quality signals — Flag if vague, promotional, spam, or lacking academic substance.
 6. Novelty — Does the paper contribute something beyond what is already known?
 
 DECISION OPTIONS
@@ -147,13 +147,25 @@ Return ONLY valid JSON with no additional text, no markdown, no explanation:
   "recommended_tags": ["<tag1>", "<tag2>"]
 }}"""
 
-        raw = gl.exec_prompt(prompt)
+        # Non-deterministic LLM call must be run via gl.nondet.exec_prompt
+        # inside a leader function and wrapped with an Equivalence Principle
+        # so validators can reach consensus on the result.
+        def _run_review() -> str:
+            return gl.nondet.exec_prompt(prompt)
+
+        raw = gl.eq_principle.prompt_comparative(
+            _run_review,
+            principle=(
+                "The JSON responses are equivalent if they agree on: "
+                "decision field exactly, relevance_score within 10 points, "
+                "quality_score within 10 points, and confidence level exactly."
+            ),
+        )
 
         # Parse and validate
         try:
             result = json.loads(raw.strip())
         except Exception:
-            # Try to extract JSON substring
             start = raw.find("{")
             end = raw.rfind("}") + 1
             result = json.loads(raw[start:end])
@@ -176,11 +188,9 @@ Return ONLY valid JSON with no additional text, no markdown, no explanation:
 
         self.reviews[paper_id] = json.dumps(result)
 
-        # Update paper status
         paper["status"] = result["decision"]
         self.papers[paper_id] = json.dumps(paper)
 
-        # Add to corpus papers list if accepted
         if result["decision"] in ("ACCEPT", "ACCEPT_WITH_LOW_CONFIDENCE"):
             papers_list = json.loads(self.corpus_papers.get(paper["corpus_id"], "[]"))
             if paper_id not in papers_list:
@@ -245,7 +255,18 @@ Return ONLY valid JSON:
   "recommended_tags": []
 }}"""
 
-        raw = gl.exec_prompt(prompt)
+        # Non-deterministic LLM call wrapped in Equivalence Principle
+        def _run_dispute_review() -> str:
+            return gl.nondet.exec_prompt(prompt)
+
+        raw = gl.eq_principle.prompt_comparative(
+            _run_dispute_review,
+            principle=(
+                "The JSON responses are equivalent if they agree on: "
+                "decision field exactly and confidence level exactly."
+            ),
+        )
+
         try:
             result = json.loads(raw.strip())
         except Exception:
